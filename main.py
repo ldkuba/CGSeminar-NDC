@@ -5,6 +5,10 @@ import time
 
 import torch
 
+# When called from pybind from src directory
+if run_from_framework:
+    import sys
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../extern/NDC')
 
 parser = argparse.ArgumentParser()
 
@@ -35,6 +39,11 @@ parser.add_argument("--postprocessing", action="store_true", dest="postprocessin
 parser.add_argument("--gpu", action="store", dest="gpu", default="0", help="to use which GPU [0]")
 
 FLAGS = parser.parse_args()
+
+if run_from_framework:
+    FLAGS.test_input = input_sdf
+    FLAGS.input_type = "sdf"
+    FLAGS.checkpoint_dir = os.path.dirname(os.path.realpath(__file__)) + '/../extern/NDC/weights'
 
 is_training = False #training on a dataset
 is_testing = False #testing on a dataset
@@ -514,7 +523,7 @@ elif quick_testing:
     if FLAGS.input_type == "sdf" or FLAGS.input_type == "voxel" or FLAGS.input_type == "udf":
         #Create test dataset
         dataset_test = dataset.single_shape_grid(FLAGS.test_input, receptive_padding, FLAGS.input_type, is_undc=(FLAGS.method == "undc"))
-        dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=1)  #batch_size must be 1
+        dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=0)  #batch_size must be 1
 
         for i, data in enumerate(dataloader_test, 0):
 
@@ -561,7 +570,6 @@ elif quick_testing:
                     pred_output_float_numpy = np.transpose(pred_output_float[0].detach().cpu().numpy(), [1,2,3,0])
                 else:
                     pred_output_float_numpy = np.transpose(gt_output_float_[0].detach().cpu().numpy(), [1,2,3,0])
-
 
     elif FLAGS.input_type == "pointcloud":
         #Create test dataset
@@ -661,4 +669,9 @@ elif quick_testing:
     else:
         #vertices, triangles = utils.dual_contouring_ndc_test(pred_output_bool_numpy, pred_output_float_numpy)
         vertices, triangles = cutils.dual_contouring_ndc(np.ascontiguousarray(pred_output_bool_numpy, np.int32), np.ascontiguousarray(pred_output_float_numpy, np.float32))
-    utils.write_obj_triangle(FLAGS.sample_dir+"/quicktest_"+FLAGS.method+"_"+FLAGS.input_type+".obj", vertices, triangles)
+    
+    if run_from_framework:
+        results.out_mesh.vertices = vertices
+        results.out_mesh.indices = triangles
+    else:
+        utils.write_obj_triangle(FLAGS.sample_dir+"/quicktest_"+FLAGS.method+"_"+FLAGS.input_type+".obj", vertices, triangles)

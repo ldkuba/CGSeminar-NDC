@@ -284,7 +284,7 @@ class single_shape_grid(torch.utils.data.Dataset):
                 exit(-1)
 
             grid_size = LOD_input.shape[0]-1
-            gt_input_ = LOD_input*grid_size #denormalize
+            gt_input_ = LOD_input*grid_size * -1.0 #denormalize
 
             if self.input_type=="udf":
                 gt_input_ = np.abs(gt_input_)
