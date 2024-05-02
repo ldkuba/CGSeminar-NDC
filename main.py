@@ -519,13 +519,14 @@ elif quick_testing:
     if net_float:
         network_float.eval()
 
-
     if FLAGS.input_type == "sdf" or FLAGS.input_type == "voxel" or FLAGS.input_type == "udf":
         #Create test dataset
         dataset_test = dataset.single_shape_grid(FLAGS.test_input, receptive_padding, FLAGS.input_type, is_undc=(FLAGS.method == "undc"))
         dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=0)  #batch_size must be 1
 
         for i, data in enumerate(dataloader_test, 0):
+
+            start_time = time.time()
 
             gt_input_, gt_output_bool_mask_ = data
 
@@ -671,6 +672,8 @@ elif quick_testing:
         vertices, triangles = cutils.dual_contouring_ndc(np.ascontiguousarray(pred_output_bool_numpy, np.int32), np.ascontiguousarray(pred_output_float_numpy, np.float32))
     
     if run_from_framework:
+        end_time = time.time()
+        results.time_ms = (end_time - start_time) * 1000.0
         results.out_mesh.vertices = vertices
         results.out_mesh.indices = triangles
     else:
