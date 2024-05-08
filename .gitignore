@@ -1,1 +1,7 @@
 __pycache__
+
+# build artifacts
+build/
+
+cutils.c
+*.pyd
