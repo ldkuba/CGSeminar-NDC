@@ -43,6 +43,7 @@ FLAGS = parser.parse_args()
 if run_from_framework:
     FLAGS.test_input = input_sdf
     FLAGS.input_type = "sdf"
+    FLAGS.resolution = in_resolution
     FLAGS.checkpoint_dir = os.path.dirname(os.path.realpath(__file__)) + '/../extern/NDC/weights'
 
 is_training = False #training on a dataset
